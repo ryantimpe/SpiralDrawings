@@ -11,6 +11,7 @@ find_rtools() # is TRUE now
 
 
 install_github("thomasp85/tweenr")
+install_github("thomasp85/transformr")
 install_github("thomasp85/gganimate")
 # install.packages("C:/Users/rtimpe/Downloads/gganimate_0.9.9.9999.tar.gz", repos = NULL, type="source")
 
@@ -83,8 +84,6 @@ scale_image <- function(image, img_size){
 size = 50
 img_raw <- readJPEG("Einstein.jpg") %>% 
   scale_image(size*2)
-img_raw <- readJPEG("JP.jpg") %>% 
-  scale_image(size*2)
 
 img_raw <- readJPEG("GoldenGirls.jpg") %>% 
   scale_image(size*2)
@@ -135,10 +134,46 @@ img_spiral <- spiral %>%
 
 ggplot(img_spiral, aes(x=x, y=y, size = 1-grey)) +
   geom_path() +
-  scale_size_continuous(range = c(0.1, 1.5))+
+  scale_size_continuous(range = c(0.1, 1.8))+
   coord_fixed() +
-  theme_minimal() +
+  theme_void() +
   theme(
+    legend.position = "none"
+  )
+
+gg_colors <- sel_color <- c(
+               "#9affd0", #Aqua
+               "#ffb5f5", #Pink
+               "#5384ff", #Blue
+               "#ff9e53", #Orange
+               #"#ffed89", #Yellow
+               "#de89ff", #Purple
+               "#00436b", #RT blue
+               "#ff6141", #Red/Orange
+               "#ff25ab" #Bright pink
+)
+
+header_spiral <- c(300, 600, 900, 1200, 2000, 2900, nrow(img_spiral)) %>% 
+  map2_df(
+    sample(gg_colors, 7),
+    function(ii, cc){
+    dat <- img_spiral %>% 
+      filter(row_number() <= ii) %>% 
+      mutate(spir_group = ii,
+             fill = cc)
+    
+    return(dat)
+  })
+
+ggplot(header_spiral, aes(x=x, y=y, size = 1-grey)) +
+  geom_path(aes(color = fill)) +
+  scale_size_continuous(range = c(0.1, 1.5))+
+  scale_color_identity() +
+  coord_fixed() +
+  facet_grid(cols = vars(spir_group)) +
+  theme_void() +
+  theme(
+    strip.text = element_blank(),
     legend.position = "none"
   )
 
@@ -148,7 +183,7 @@ ggplot(img_spiral, aes(x=x, y=y, size = 1-grey, color = color)) +
   scale_color_identity() +
   # coord_polar() +
   coord_fixed() +
-  theme_minimal()+
+  theme_void()+
   theme(
     legend.position = "none"
   )
@@ -158,21 +193,12 @@ ggplot(img_spiral, aes(x=x, y=y,  color = color)) +
   # scale_size_continuous(range = c(0.1, 1.5))+
   scale_color_identity() +
   coord_fixed() +
-  theme_minimal()+
+  theme_void()+
   theme(
     legend.position = "none"
   )
 
 #Animated
-n = 1
-nn = 3920
-arr = c()
-while(length(arr) < nn){
-  arr <- c(arr, rep(n, n))
-  n <- n+1
-}
-arr <- arr[1:nn]
-
 img_spiral %>% 
   mutate(time = row_number(), group = 1) %>% 
   ggplot(aes(x=x, y=y, size = (1-grey)^(3/2), group = group)) +
@@ -184,6 +210,43 @@ img_spiral %>%
     legend.position = "none"
   ) +
   transition_reveal(group, time)
+
+img_spiral %>% 
+  mutate(time = row_number(), group = 1) %>% 
+  mutate(state = "spiral") %>% 
+  bind_rows(mutate(., state = "line", 
+                   x = 1:n(),
+                   y = max(y))) %>% 
+  ggplot(aes(x=x, y=y, size = (1-grey)^(3/2), group = group)) +
+  geom_path() +
+  scale_size_continuous(range = c(0.01, 2))+
+  # coord_fixed() +
+  theme_void() +
+  theme(
+    legend.position = "none"
+  ) +
+  transition_components(y, time)
+
+
+#Draw
+img_spiral %>% 
+  mutate(time = row_number(), group = 1) %>% 
+  mutate(state = "spiral") %>% 
+  bind_rows(mutate(., state = "line", 
+                   x = 1:n(),
+                   y = max(y))) %>% 
+  ggplot(aes(x=x, y=y, size = (1-grey)^(3/2), group = group)) +
+  geom_path() +
+  scale_size_continuous(range = c(0.01, 2))+
+  coord_fixed(ylim = c(0, 200)) +
+  theme_void() +
+  theme(
+    legend.position = "none"
+  ) +
+  transition_states(state,
+                   transition_length = 3,
+                   state_length = 2) +
+  view_static()
 
 
 img_spiral %>% 
