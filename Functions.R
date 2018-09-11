@@ -73,8 +73,7 @@ radius <- 50
 img_raw <- readJPEG("Einstein.jpg") %>% 
   scale_image(radius*2)
 
-# FUnction for equidistant points on a spiral
-
+# Function for equidistant points on a spiral
 spiral_cartesian <- function(img_df, spiral_radius, num_coils, chord_length, rotation){
   img <- img_df$Img_scaled
   
@@ -109,11 +108,6 @@ spiral_cartesian <- function(img_df, spiral_radius, num_coils, chord_length, rot
   return(c(img_df, list(spiral = spiral)))
 }
 
-
-img_spiral <- img_raw %>% 
-  spiral_cartesian(radius, 50, 2, 0)
-
-
 #Project the image onto the spiral
 project_image <- function(img_df){
   dat <- img_df$spiral %>% 
@@ -128,14 +122,4 @@ project_image <- function(img_df){
   return(c(img_df, list(projected_spiral = dat)))
 }
 
-img_spiral2 <- img_spiral %>% 
-  project_image()
 
-ggplot(img_spiral2$projected_spiral, aes(x=x, y=y, size = grey)) +
-  geom_path() +
-  scale_size_continuous(range = c(0.1, 1.8))+
-  coord_fixed() +
-  theme_void() +
-  theme(
-    legend.position = "none"
-  )
